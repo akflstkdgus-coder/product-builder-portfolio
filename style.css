@@ -1,1 +1,73 @@
-/* Add styles here */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap');
+
+:root {
+  --background-color-start: #1e1e1e;
+  --background-color-end: #121212;
+  --text-color: #ffffff;
+  --accent-color: #ff4081;
+  --ball-background: #4e4e4e;
+  --ball-text-color: #ffffff;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  --glow-color: rgba(255, 64, 129, 0.7);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(to bottom, var(--background-color-start), var(--background-color-end));
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  text-align: center;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%239C92AC' fill-opacity='0.1' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.app-container {
+  padding: 2rem;
+  border-radius: 15px;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px var(--shadow-color);
+}
+
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  color: var(--accent-color);
+}
+
+.numbers-display {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  min-height: 400px; /* Increased to accommodate 5 rows */
+}
+
+.set-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.8rem;
+}
+
+#generate-btn {
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--text-color);
+  background-color: var(--accent-color);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px var(--glow-color);
+}
+
+#generate-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 25px var(--glow-color), 0 0 40px var(--accent-color);
+}
