@@ -54,6 +54,14 @@ class LottoBall extends HTMLElement {
             transform: scale(1);
           }
         }
+
+        @media (max-width: 480px) {
+          .ball {
+            width: 45px;
+            height: 45px;
+            font-size: 1.1rem;
+          }
+        }
       </style>
       <div class="ball ${colorClass}">
         ${number}
@@ -65,7 +73,27 @@ class LottoBall extends HTMLElement {
 customElements.define('lotto-ball', LottoBall);
 
 const generateBtn = document.getElementById('generate-btn');
+const themeToggle = document.getElementById('theme-toggle');
 const numbersDisplay = document.querySelector('.numbers-display');
+const toggleIcon = themeToggle.querySelector('.icon');
+
+// Theme Management
+const savedTheme = localStorage.getItem('theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+updateToggleIcon(savedTheme);
+
+themeToggle.addEventListener('click', () => {
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  
+  document.documentElement.setAttribute('data-theme', newTheme);
+  localStorage.setItem('theme', newTheme);
+  updateToggleIcon(newTheme);
+});
+
+function updateToggleIcon(theme) {
+  toggleIcon.textContent = theme === 'dark' ? '🌙' : '☀️';
+}
 
 function generateLottoNumbers() {
   const numbers = new Set();
@@ -91,7 +119,7 @@ generateBtn.addEventListener('click', () => {
         const lottoBall = document.createElement('lotto-ball');
         lottoBall.setAttribute('number', number);
         setRow.appendChild(lottoBall);
-      }, (i * 6 + index) * 100); // Stagger all balls across sets
+      }, (i * 6 + index) * 60); // Faster stagger for 5 sets
     });
   }
 });
