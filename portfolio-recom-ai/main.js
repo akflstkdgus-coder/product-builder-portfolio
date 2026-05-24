@@ -35,7 +35,11 @@ function addComma(value) {
   return Number(numberOnly).toLocaleString("ko-KR");
 }
 
+const PORTFOLIO_INPUT_STORAGE_KEY = "portfolio-recom-ai-inputs-v1";
+
 document.addEventListener("DOMContentLoaded", function () {
+  restorePortfolioInputs();
+
   const moneyInputs = document.querySelectorAll(".money-input");
 
   moneyInputs.forEach(input => {
@@ -54,6 +58,52 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
+
+function getSavableInputElements() {
+  return Array.from(document.querySelectorAll("input[id], select[id]"))
+    .filter(element => !element.disabled && element.type !== "button" && element.type !== "submit");
+}
+
+function savePortfolioInputs() {
+  const savedValues = {};
+
+  getSavableInputElements().forEach(element => {
+    savedValues[element.id] = element.type === "checkbox" ? element.checked : element.value;
+  });
+
+  localStorage.setItem(PORTFOLIO_INPUT_STORAGE_KEY, JSON.stringify(savedValues));
+
+  const button = document.getElementById("saveInputsBtn");
+  const originalText = button.textContent;
+  button.textContent = "저장 완료";
+  button.disabled = true;
+
+  window.setTimeout(() => {
+    button.textContent = originalText;
+    button.disabled = false;
+  }, 1200);
+}
+
+function restorePortfolioInputs() {
+  const savedRaw = localStorage.getItem(PORTFOLIO_INPUT_STORAGE_KEY);
+  if (!savedRaw) return;
+
+  try {
+    const savedValues = JSON.parse(savedRaw);
+
+    getSavableInputElements().forEach(element => {
+      if (!Object.prototype.hasOwnProperty.call(savedValues, element.id)) return;
+
+      if (element.type === "checkbox") {
+        element.checked = Boolean(savedValues[element.id]);
+      } else {
+        element.value = savedValues[element.id];
+      }
+    });
+  } catch (error) {
+    console.warn("저장된 입력값을 불러오지 못했습니다.", error);
+  }
+}
 
 const PORTFOLIO_AI_ENDPOINT = "";
 // 실제 운영 시에는 브라우저에 OpenAI API Key를 직접 넣지 말고,

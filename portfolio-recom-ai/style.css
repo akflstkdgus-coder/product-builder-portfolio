@@ -112,6 +112,24 @@ button:hover {
   background: #1e40af;
 }
 
+.secondary-action-button {
+  margin-top: 18px;
+  background: #0f766e;
+}
+
+.secondary-action-button:hover {
+  background: #115e59;
+}
+
+.secondary-action-button:disabled {
+  background: #94a3b8;
+  cursor: default;
+}
+
+#generateBtn {
+  margin-top: 10px;
+}
+
 .result-box {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
