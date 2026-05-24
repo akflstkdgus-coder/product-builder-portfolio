@@ -526,8 +526,8 @@ function renderAllocation(input, allocation, cashBasedAmounts, totalBasedAmounts
   const cashBasedRows = [
     { label: "현금", amount: cashBasedAmounts.cash, className: "cash" },
     { label: "예적금", amount: cashBasedAmounts.bond, className: "bond" },
-    { label: "국내주식", amount: cashBasedAmounts.domesticStock, className: "domestic" },
-    { label: "해외주식", amount: cashBasedAmounts.globalStock, className: "global" },
+    { label: "국내주식", amount: cashBasedAmounts.domesticStock, className: "domestic", recommendationMarket: "domestic" },
+    { label: "해외주식", amount: cashBasedAmounts.globalStock, className: "global", recommendationMarket: "global" },
     { label: "금/대체자산/기타", amount: cashBasedAmounts.alternative, className: "alt" }
   ];
 
@@ -802,23 +802,107 @@ function getRatioText(amount, baseAmount) {
 function createAllocationRowsFromAmounts(rows, baseAmount) {
   return rows.map(row => {
     const ratio = baseAmount > 0 ? (row.amount / baseAmount) * 100 : 0;
-    return createAllocationBarWithAmount(row.label, ratio, row.amount, row.className, row.rowClass);
+    return createAllocationBarWithAmount(row.label, ratio, row.amount, row.className, row.rowClass, row.recommendationMarket);
   }).join("");
 }
 
-function createAllocationBarWithAmount(label, value, amount, className, rowClass = "") {
+function createAllocationBarWithAmount(label, value, amount, className, rowClass = "", recommendationMarket = "") {
   const safeValue = Math.max(0, Math.min(value, 100));
+  const recommendationButton = recommendationMarket
+    ? `<button type="button" class="stock-recommendation-button" onclick="toggleStockRecommendations('${recommendationMarket}', this)">종목 추천</button>`
+    : "";
+  const recommendationPanel = recommendationMarket
+    ? `<div class="stock-recommendation-panel" data-recommendation-market="${recommendationMarket}" hidden></div>`
+    : "";
+
   return `
     <div class="allocation-row ${rowClass}">
       <div class="allocation-label">
-        <span>${label}</span>
+        <span class="allocation-title">${label}${recommendationButton}</span>
         <span>${value.toFixed(1)}% <span class="allocation-amount">(${formatKRW(amount)})</span></span>
       </div>
       <div class="bar">
         <div class="bar-fill ${className}" style="width:${safeValue}%"></div>
       </div>
+      ${recommendationPanel}
     </div>
   `;
+}
+
+function toggleStockRecommendations(market, button) {
+  const row = button.closest(".allocation-row");
+  const panel = row.querySelector(".stock-recommendation-panel");
+  const isOpening = panel.hidden;
+
+  if (isOpening && !panel.innerHTML.trim()) {
+    panel.innerHTML = renderStockRecommendations(market);
+  }
+
+  panel.hidden = !isOpening;
+  button.textContent = isOpening ? "추천 닫기" : "종목 추천";
+  button.setAttribute("aria-expanded", String(isOpening));
+}
+
+function renderStockRecommendations(market) {
+  const data = getStockRecommendations(market);
+  return `
+    <div class="stock-recommendation-grid">
+      <div class="stock-recommendation-group">
+        <h5>AI모델을 이용한 추천종목 5개</h5>
+        <ol>
+          ${data.aiModel.map(item => `<li><strong>${item.name}</strong><span>${item.reason}</span></li>`).join("")}
+        </ol>
+      </div>
+      <div class="stock-recommendation-group">
+        <h5>전문 투자자 및 애널리스트 추천종목 5개</h5>
+        <ol>
+          ${data.analystConsensus.map(item => `<li><strong>${item.name}</strong><span>${item.reason}</span></li>`).join("")}
+        </ol>
+      </div>
+    </div>
+    <p class="stock-recommendation-disclaimer">
+      추천종목은 참고용 예시이며 매수·매도 권유가 아닙니다. 실제 투자 전 최신 실적, 밸류에이션, 리스크와 본인의 투자성향을 확인하세요.
+    </p>
+  `;
+}
+
+function getStockRecommendations(market) {
+  const recommendations = {
+    domestic: {
+      aiModel: [
+        { name: "삼성전자", reason: "반도체·AI 메모리 회복 사이클과 높은 유동성을 함께 고려한 핵심 대형주" },
+        { name: "SK하이닉스", reason: "HBM 수요와 데이터센터 투자 확대에 민감한 성장 노출" },
+        { name: "현대차", reason: "글로벌 판매 기반, 주주환원, 전동화 전환을 함께 반영" },
+        { name: "NAVER", reason: "플랫폼 현금흐름과 AI·커머스 확장성을 고려" },
+        { name: "삼성바이오로직스", reason: "방어적 이익 가시성과 글로벌 CDMO 성장성을 반영" }
+      ],
+      analystConsensus: [
+        { name: "삼성전자", reason: "국내 증권사 리서치에서 장기 핵심 보유 종목으로 자주 거론" },
+        { name: "SK하이닉스", reason: "AI 반도체 수혜와 이익 개선 기대가 높은 편" },
+        { name: "현대차", reason: "수익성, 환율 민감도, 주주환원 매력이 함께 부각" },
+        { name: "KB금융", reason: "배당·자사주 등 주주환원과 안정적 이익 기반을 평가" },
+        { name: "HD현대일렉트릭", reason: "전력 인프라 투자 확대와 수주 모멘텀을 반영" }
+      ]
+    },
+    global: {
+      aiModel: [
+        { name: "Microsoft", reason: "클라우드, 생산성 소프트웨어, AI 인프라의 복합 성장성" },
+        { name: "NVIDIA", reason: "AI 가속기 생태계와 데이터센터 투자 확대에 대한 직접 노출" },
+        { name: "Alphabet", reason: "검색·광고 현금흐름과 AI 모델·클라우드 옵션을 함께 보유" },
+        { name: "Amazon", reason: "AWS 성장성과 이커머스 수익성 개선을 동시에 반영" },
+        { name: "Eli Lilly", reason: "비만·당뇨 치료제 파이프라인 기반의 헬스케어 성장주" }
+      ],
+      analystConsensus: [
+        { name: "NVIDIA", reason: "AI 인프라 투자 확대의 대표 수혜주로 평가" },
+        { name: "Microsoft", reason: "AI 서비스 상용화와 클라우드 점유율을 높게 평가" },
+        { name: "Amazon", reason: "AWS와 광고 사업의 이익 기여 확대 기대" },
+        { name: "Alphabet", reason: "광고 회복력과 AI 투자 여력을 동시에 보유" },
+        { name: "Broadcom", reason: "AI 네트워킹·맞춤형 반도체 수요와 소프트웨어 매출을 반영" }
+      ]
+    }
+  };
+
+  return recommendations[market] || recommendations.domestic;
 }
 
 function createAllocationBar(label, value, className) {
