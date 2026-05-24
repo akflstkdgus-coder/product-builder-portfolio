@@ -4,19 +4,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Lotto AI - AI 로또 번호 생성기 및 이미지 판독기</title>
-  <meta name="description" content="인공지능 기술을 활용한 로또 번호 생성 및 이미지 판독 서비스를 제공하는 My Lotto AI 포털입니다.">
+  <title>Smart AI Hub - AI 자산배분 및 생활 지능 도구 포털</title>
+  <meta name="description" content="인공지능 기술을 통해 일상을 혁신합니다. AI 자산배분(IPS), 이미지 판독기, 로또 번호 생성기 등 고성능 AI 도구를 만나보세요.">
   <link href='/style.css' rel='stylesheet'>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1762837128941351" crossorigin="anonymous"></script>
-<meta name="google-adsense-account" content="ca-pub-1762837128941351">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1762837128941351" crossorigin="anonymous"></script>
+  <meta name="google-adsense-account" content="ca-pub-1762837128941351">
 </head>
 <body>
   <nav class="navbar">
-    <a href="/" class="nav-brand">My Lotto AI</a>
+    <a href="/" class="nav-brand">Smart AI Hub</a>
     <div class="nav-links">
       <a href="/">Home</a>
+      <a href="/portfolio-recom-ai/">AI Portfolio</a>
       <a href="/about.html">About</a>
       <button id="theme-toggle" aria-label="Toggle dark/light mode">
         <span class="icon">🌙</span>
@@ -26,15 +27,33 @@
 
   <div class="app-container">
     <header>
-      <h1>My Lotto AI Portal</h1>
-      <p class="tagline">인공지능과 알고리즘이 만나는 스마트 도구 모음</p>
+      <h1>Smart AI Hub Portal</h1>
+      <p class="tagline">데이터와 인공지능이 만드는 스마트한 미래</p>
     </header>
 
     <main>
+      <section class="intro-section">
+        <h2>AI Solution Overview</h2>
+        <div class="content-block">
+          <p>Smart AI Hub는 복잡한 데이터를 단순하게 만들고, 일상의 결정을 돕는 다양한 인공지능 도구를 제공합니다. 브라우저 기반의 엣지 컴퓨팅 기술을 활용하여 사용자의 데이터를 서버로 전송하지 않고도 빠르고 안전한 분석 결과를 제공하는 것이 우리의 핵심 가치입니다.</p>
+        </div>
+      </section>
+
+      <!-- Featured Tool: AI Portfolio Allocation -->
+      <section class="tool-highlight">
+        <h2>AI Portfolio Allocation Engine (IPS)</h2>
+        <div class="content-block">
+          <p>투자자의 연령, 위험 감내도, 재무 목표를 분석하여 최적의 전략적 자산배분(SAA) 안을 도출합니다. 현대 포트폴리오 이론과 AI 모델링을 결합하여 개인화된 투자 가이드라인을 즉시 생성합니다.</p>
+          <div style="text-align: center; margin-top: 1.5rem;">
+            <a href="/portfolio-recom-ai/" class="btn" style="text-decoration: none; display: inline-block;">포트폴리오 엔진 바로가기</a>
+          </div>
+        </div>
+      </section>
+
       <section class="classifier-section">
         <h2>AI Image Classifier</h2>
         <div class="content-block">
-          <p>Teachable Machine 기술을 활용한 <strong>붉은사막(Crimson Desert) vs 음식</strong> 판독기입니다. 인공지능이 이미지를 분석하여 게임 화면인지 음식 사진인지 높은 정확도로 구분합니다.</p>
+          <p>Teachable Machine 기술을 활용한 <strong>붉은사막(Crimson Desert) vs 음식</strong> 판독기입니다. 인공지능이 이미지를 분석하여 게임 화면인지 음식 사진인지 높은 정확도로 구분합니다. 딥러닝 모델이 실시간으로 이미지를 스캔하여 결과를 도출합니다.</p>
         </div>
         <div class="classifier-controls">
           <button type="button" id="start-webcam-btn">웹캠 시작</button>
@@ -51,18 +70,20 @@
       </section>
 
       <section class="lotto-section">
-        <h2>AI Lotto Generator</h2>
+        <h2>Smart Lotto Generator</h2>
         <div class="content-block">
-          <p>무작위 추출 알고리즘을 최적화하여 5세트의 로또 번호를 생성합니다. 시각적으로 뛰어난 애니메이션과 함께 매주 행운의 숫자를 확인해보세요.</p>
+          <p>고도화된 난수 발생 알고리즘을 최적화하여 5세트의 로또 번호를 생성합니다. 단순 무작위가 아닌, 시각적으로 균형 잡힌 애니메이션과 함께 매주 행운의 숫자를 확인해보세요.</p>
         </div>
         <div class="numbers-display"></div>
-        <button id="generate-btn">번호 생성하기</button>
+        <div style="text-align: center;">
+            <button id="generate-btn">번호 생성하기</button>
+        </div>
       </section>
 
       <section class="contact-section">
-        <h2>Contact & Inquiry</h2>
+        <h2>Contact & Support</h2>
         <div class="content-block">
-          <p>제휴 제안이나 서비스 이용 중 궁금한 점이 있으시면 아래 폼을 통해 언제든지 문의해 주세요. 빠른 시일 내에 답변 드리겠습니다.</p>
+          <p>서비스 이용 중 제안하고 싶은 기능이나 기술적 문의사항이 있으시면 언제든지 메시지를 남겨주세요. 개발팀이 검토 후 답변 드리겠습니다.</p>
         </div>
         <form action="https://formspree.io/f/mojblpqd" method="POST" id="contact-form">
           <div class="form-group">
@@ -72,7 +93,7 @@
             <input type="email" name="email" placeholder="이메일 주소" required>
           </div>
           <div class="form-group">
-            <textarea name="message" placeholder="문의 내용을 입력해주세요" rows="4" required></textarea>
+            <textarea name="message" placeholder="문의 내용을 상세히 입력해주세요" rows="4" required></textarea>
           </div>
           <button type="submit" id="form-submit-btn">문의 보내기</button>
         </form>
@@ -80,7 +101,7 @@
       </section>
 
       <section class="comment-section">
-        <h2>Community Comments</h2>
+        <h2>Global Community</h2>
         <div id="disqus_thread"></div>
         <script>
             (function() {
@@ -97,12 +118,13 @@
   <footer>
     <div class="footer-links">
       <a href="/">Home</a>
+      <a href="/portfolio-recom-ai/">Portfolio AI</a>
       <a href="/about.html">About</a>
       <a href="/privacy.html">Privacy Policy</a>
       <a href="/terms.html">Terms of Service</a>
     </div>
-    <p>&copy; 2026 My Lotto AI. All rights reserved.</p>
-    <p>본 사이트의 도구는 정보 제공의 목적으로만 사용되며, 결과에 대한 법적 책임을 지지 않습니다.</p>
+    <p>&copy; 2026 Smart AI Hub. All rights reserved.</p>
+    <p>본 사이트의 모든 AI 도구는 정보 제공의 목적으로만 사용되며, 모든 투자 및 선택에 대한 책임은 사용자에게 있습니다.</p>
   </footer>
 
   <script defer type="text/javascript" src="/main.js"></script>
