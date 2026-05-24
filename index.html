@@ -4,22 +4,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lotto & Image Classifier</title>
+  <title>My Lotto AI - AI 로또 번호 생성기 및 이미지 판독기</title>
+  <meta name="description" content="인공지능 기술을 활용한 로또 번호 생성 및 이미지 판독 서비스를 제공하는 My Lotto AI 포털입니다.">
   <link href='/style.css' rel='stylesheet'>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 </head>
 <body>
-  <div class="app-container">
-    <header>
-      <h1>AI Image Classifier</h1>
+  <nav class="navbar">
+    <a href="/" class="nav-brand">My Lotto AI</a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/about.html">About</a>
       <button id="theme-toggle" aria-label="Toggle dark/light mode">
         <span class="icon">🌙</span>
       </button>
+    </div>
+  </nav>
+
+  <div class="app-container">
+    <header>
+      <h1>My Lotto AI Portal</h1>
+      <p class="tagline">인공지능과 알고리즘이 만나는 스마트 도구 모음</p>
     </header>
+
     <main>
       <section class="classifier-section">
-        <h2>붉은사막 vs 음식 판독기</h2>
+        <h2>AI Image Classifier</h2>
+        <div class="content-block">
+          <p>Teachable Machine 기술을 활용한 <strong>붉은사막(Crimson Desert) vs 음식</strong> 판독기입니다. 인공지능이 이미지를 분석하여 게임 화면인지 음식 사진인지 높은 정확도로 구분합니다.</p>
+        </div>
         <div class="classifier-controls">
           <button type="button" id="start-webcam-btn">웹캠 시작</button>
           <div class="upload-btn-wrapper">
@@ -27,27 +41,27 @@
             <input type="file" id="image-input" accept="image/*" />
           </div>
         </div>
-
         <div id="media-container">
           <div id="webcam-container"></div>
           <img id="image-preview" style="display:none;" />
         </div>
-
         <div id="label-container"></div>
       </section>
 
-      <hr class="separator">
-
       <section class="lotto-section">
-        <h2>Lotto Number Generator</h2>
+        <h2>AI Lotto Generator</h2>
+        <div class="content-block">
+          <p>무작위 추출 알고리즘을 최적화하여 5세트의 로또 번호를 생성합니다. 시각적으로 뛰어난 애니메이션과 함께 매주 행운의 숫자를 확인해보세요.</p>
+        </div>
         <div class="numbers-display"></div>
-        <button id="generate-btn">Generate Numbers</button>
+        <button id="generate-btn">번호 생성하기</button>
       </section>
 
       <section class="contact-section">
-...
-
-        <h2>제휴 및 문의</h2>
+        <h2>Contact & Inquiry</h2>
+        <div class="content-block">
+          <p>제휴 제안이나 서비스 이용 중 궁금한 점이 있으시면 아래 폼을 통해 언제든지 문의해 주세요. 빠른 시일 내에 답변 드리겠습니다.</p>
+        </div>
         <form action="https://formspree.io/f/mojblpqd" method="POST" id="contact-form">
           <div class="form-group">
             <input type="text" name="name" placeholder="성함/기업명" required>
@@ -64,7 +78,7 @@
       </section>
 
       <section class="comment-section">
-        <hr class="separator">
+        <h2>Community Comments</h2>
         <div id="disqus_thread"></div>
         <script>
             (function() {
@@ -74,11 +88,21 @@
             (d.head || d.body).appendChild(s);
             })();
         </script>
-        <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
       </section>
-
     </main>
   </div>
+
+  <footer>
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/about.html">About</a>
+      <a href="/privacy.html">Privacy Policy</a>
+      <a href="/terms.html">Terms of Service</a>
+    </div>
+    <p>&copy; 2026 My Lotto AI. All rights reserved.</p>
+    <p>본 사이트의 도구는 정보 제공의 목적으로만 사용되며, 결과에 대한 법적 책임을 지지 않습니다.</p>
+  </footer>
+
   <script defer type="text/javascript" src="/main.js"></script>
 </body>
 </html>
