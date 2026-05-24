@@ -377,13 +377,13 @@ function runLocalPortfolioAIModel(input, diagnosis) {
     allocation.globalStock -= 5;
     allocation.domesticStock -= 5;
     liquidityScore += 15;
-    reasons.push("투자철학상 현금중시형이므로 현금성 자산의 전략적 비중을 높였습니다.");
+    reasons.push("언제든 쓸 현금을 충분히 두고 싶다는 성향을 반영해 현금성 자산의 전략적 비중을 높였습니다.");
   }
 
   if (input.riskPhilosophy === "diversification") {
     allocation.globalStock += 5;
     allocation.domesticStock -= 5;
-    reasons.push("분산중시형 철학을 반영하여 해외자산 비중을 확대했습니다.");
+    reasons.push("한곳에 몰지 않고 넓게 나누려는 성향을 반영해 해외자산 비중을 확대했습니다.");
   }
 
   if (input.riskPhilosophy === "loss" || input.riskPhilosophy === "noDebt") {
@@ -392,14 +392,14 @@ function runLocalPortfolioAIModel(input, diagnosis) {
     allocation.globalStock -= 10;
     allocation.domesticStock -= 5;
     stabilityScore += 15;
-    reasons.push("손실 회피 또는 무차입 안정형 철학을 반영해 안정자산 비중을 높였습니다.");
+    reasons.push("손실 가능성을 줄이고 빚 없이 안정적으로 투자하려는 성향을 반영해 안정자산 비중을 높였습니다.");
   }
 
   if (input.riskPhilosophy === "leverage") {
     allocation.globalStock += 5;
     allocation.cash -= 5;
     growthScore += 5;
-    reasons.push("레버리지 활용형 철학을 일부 반영하되, 가계 포트폴리오 특성상 과도한 위험 확대는 제한했습니다.");
+    reasons.push("대출이나 빚도 일부 활용할 수 있다는 성향을 반영하되, 가계 포트폴리오 특성상 과도한 위험 확대는 제한했습니다.");
   }
 
   if (input.marketBelief === "longTerm") {
@@ -1005,59 +1005,59 @@ function translateGoal(value) {
 
 function translatePurpose(value) {
   const map = {
-    growth: "자산 증식형",
-    cashflow: "현금흐름형",
-    preservation: "자산 보존형",
-    goal: "목표 달성형",
-    inflation: "인플레이션 방어형"
+    growth: "돈을 불리고 싶어요",
+    cashflow: "매달 들어오는 수입이 중요해요",
+    preservation: "원금을 지키는 게 우선이에요",
+    goal: "정해둔 목표금액을 모으고 싶어요",
+    inflation: "물가가 올라도 돈의 가치를 지키고 싶어요"
   };
   return map[value] || "미입력";
 }
 
 function translateStrategy(value) {
   const map = {
-    passive: "패시브 인덱스형",
-    active: "액티브 판단형",
-    value: "가치투자형",
-    growth: "성장투자형",
-    quant: "퀀트/시스템형",
-    allocation: "자산배분형",
-    macro: "매크로 대응형"
+    passive: "시장 전체에 나눠서 투자할래요",
+    active: "좋아 보이는 종목을 직접 고를래요",
+    value: "싸게 평가된 회사를 살래요",
+    growth: "앞으로 크게 성장할 회사에 투자할래요",
+    quant: "정해진 기준과 숫자로 투자할래요",
+    allocation: "주식·채권·현금을 나눠서 투자할래요",
+    macro: "금리·환율·경기 흐름을 보고 조절할래요"
   };
   return map[value] || "미입력";
 }
 
 function translateRiskPhilosophy(value) {
   const map = {
-    volatility: "변동성 감내형",
-    loss: "손실 회피형",
-    cash: "현금중시형",
-    diversification: "분산중시형",
-    leverage: "레버리지 활용형",
-    noDebt: "무차입 안정형"
+    volatility: "오르내림이 커도 버틸 수 있어요",
+    loss: "손실 가능성을 최대한 줄이고 싶어요",
+    cash: "언제든 쓸 현금을 충분히 두고 싶어요",
+    diversification: "한곳에 몰지 않고 넓게 나눌래요",
+    leverage: "대출이나 빚도 일부 활용할 수 있어요",
+    noDebt: "빚 없이 안정적으로 투자할래요"
   };
   return map[value] || "미입력";
 }
 
 function translateMarketBelief(value) {
   const map = {
-    efficient: "시장효율 신뢰형",
-    cycle: "경기순환 활용형",
-    timing: "타이밍 활용형",
-    longTerm: "장기 우상향 신뢰형",
-    crisis: "위기기회 활용형"
+    efficient: "시장을 이기기보다 따라갈래요",
+    cycle: "경기 흐름에 맞춰 바꿀래요",
+    timing: "싸게 사고 비쌀 때 팔고 싶어요",
+    longTerm: "장기적으로 시장은 오른다고 봐요",
+    crisis: "하락장도 기회로 활용하고 싶어요"
   };
   return map[value] || "미입력";
 }
 
 function translateBehavior(value) {
   const map = {
-    saving: "정기적립형",
-    rebalance: "기계적 리밸런싱형",
-    hold: "장기보유형",
-    concentrated: "확신집중형",
-    learning: "학습중심형",
-    simple: "단순함 추구형"
+    saving: "매달 꾸준히 투자할래요",
+    rebalance: "정해진 비율로 주기적으로 맞출래요",
+    hold: "오래 들고 갈래요",
+    concentrated: "확신 있는 곳에 집중할래요",
+    learning: "공부하면서 조금씩 늘려갈래요",
+    simple: "복잡하지 않게 투자할래요"
   };
   return map[value] || "미입력";
 }
