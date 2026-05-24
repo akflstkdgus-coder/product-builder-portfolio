@@ -268,7 +268,10 @@
         </div>
       </div>
 
-      <button id="saveInputsBtn" class="secondary-action-button" onclick="savePortfolioInputs()">저장</button>
+      <div class="input-storage-actions">
+        <button id="saveInputsBtn" class="secondary-action-button" onclick="saveAssetInputs()">저장</button>
+        <button id="loadInputsBtn" class="secondary-action-button load-action-button" onclick="loadAssetInputs()">불러오기</button>
+      </div>
       <button id="generateBtn" onclick="generateIPS()">AI 모델로 IPS 및 추천 포트폴리오 생성</button>
     </section>
 
