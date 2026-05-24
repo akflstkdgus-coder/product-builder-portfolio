@@ -36,6 +36,7 @@ function addComma(value) {
 }
 
 const STORAGE_KEY = "ips_asset_inputs";
+let latestStockRecommendationContext = null;
 
 document.addEventListener("DOMContentLoaded", function () {
   loadAssetInputs({ silent: true });
@@ -604,6 +605,15 @@ function renderDiagnosis(input, diagnosis) {
 }
 
 function renderAllocation(input, allocation, cashBasedAmounts, totalBasedAmounts, totalBaseAmount, cashBaseAmount) {
+  latestStockRecommendationContext = {
+    input,
+    allocation,
+    cashBasedAmounts,
+    totalBasedAmounts,
+    totalBaseAmount,
+    cashBaseAmount
+  };
+
   const totalBasedRows = [
     { label: "현금/MMF", amount: totalBasedAmounts.cash, className: "cash" },
     { label: "예적금", amount: totalBasedAmounts.deposit, className: "deposit" },
@@ -617,8 +627,8 @@ function renderAllocation(input, allocation, cashBasedAmounts, totalBasedAmounts
   const cashBasedRows = [
     { label: "현금", amount: cashBasedAmounts.cash, className: "cash" },
     { label: "예적금", amount: cashBasedAmounts.bond, className: "bond" },
-    { label: "국내주식", amount: cashBasedAmounts.domesticStock, className: "domestic", recommendationMarket: "domestic" },
-    { label: "해외주식", amount: cashBasedAmounts.globalStock, className: "global", recommendationMarket: "global" },
+    { label: "국내주식", amount: cashBasedAmounts.domesticStock, className: "domestic", recommendationMarket: "KR" },
+    { label: "해외주식", amount: cashBasedAmounts.globalStock, className: "global", recommendationMarket: "US" },
     { label: "금/대체자산/기타", amount: cashBasedAmounts.alternative, className: "alt" }
   ];
 
@@ -900,7 +910,7 @@ function createAllocationRowsFromAmounts(rows, baseAmount) {
 function createAllocationBarWithAmount(label, value, amount, className, rowClass = "", recommendationMarket = "") {
   const safeValue = Math.max(0, Math.min(value, 100));
   const recommendationButton = recommendationMarket
-    ? `<button type="button" class="stock-recommendation-button" onclick="toggleStockRecommendations('${recommendationMarket}', this)">종목 추천</button>`
+    ? `<button type="button" class="stock-recommendation-button" onclick="handleRecommendStocks('${recommendationMarket}')">종목 추천</button>`
     : "";
   const recommendationPanel = recommendationMarket
     ? `<div class="stock-recommendation-panel" data-recommendation-market="${recommendationMarket}" hidden></div>`
@@ -920,22 +930,26 @@ function createAllocationBarWithAmount(label, value, amount, className, rowClass
   `;
 }
 
-function toggleStockRecommendations(market, button) {
-  const row = button.closest(".allocation-row");
-  const panel = row.querySelector(".stock-recommendation-panel");
-  const isOpening = panel.hidden;
+function handleRecommendStocks(market) {
+  const panel = document.querySelector(`[data-recommendation-market="${market}"]`);
+  if (!panel) return;
 
-  if (isOpening && !panel.innerHTML.trim()) {
-    panel.innerHTML = renderStockRecommendations(market);
+  const recommendations = buildStockRecommendationResult(market);
+  panel.innerHTML = renderStockRecommendationPanel(recommendations);
+  panel.hidden = false;
+
+  const button = panel.closest(".allocation-row")?.querySelector(".stock-recommendation-button");
+  if (button) {
+    button.textContent = "다시 추천";
+    button.setAttribute("aria-expanded", "true");
   }
-
-  panel.hidden = !isOpening;
-  button.textContent = isOpening ? "추천 닫기" : "종목 추천";
-  button.setAttribute("aria-expanded", String(isOpening));
 }
 
 function renderStockRecommendations(market) {
-  const data = getStockRecommendations(market);
+  return renderStockRecommendationPanel(buildStockRecommendationResult(market));
+}
+
+function renderStockRecommendationPanel(data) {
   return `
     <div class="stock-recommendation-grid">
       <div class="stock-recommendation-group">
@@ -957,43 +971,257 @@ function renderStockRecommendations(market) {
   `;
 }
 
+function buildStockRecommendationResult(market) {
+  const investorProfile = getInvestorProfile();
+  const universe = filterStockUniverseForProfile(getStockUniverse(market), investorProfile);
+  const aiScoredStocks = universe.map(stock => ({
+    ...stock,
+    score: calculateStockScore(stock, investorProfile, "AI")
+  }));
+  const analystScoredStocks = universe.map(stock => ({
+    ...stock,
+    score: calculateStockScore(stock, investorProfile, "ANALYST")
+  }));
+  const aiStorageKey = `stock_recommendations_${market}_AI`;
+  const analystStorageKey = `stock_recommendations_${market}_ANALYST`;
+  const aiSelection = pickWeightedRandomStocks(aiScoredStocks, 5, sessionStorage.getItem(aiStorageKey));
+  const analystSelection = pickWeightedRandomStocks(analystScoredStocks, 5, sessionStorage.getItem(analystStorageKey));
+
+  sessionStorage.setItem(aiStorageKey, aiSelection.map(stock => stock.name).sort().join("|"));
+  sessionStorage.setItem(analystStorageKey, analystSelection.map(stock => stock.name).sort().join("|"));
+
+  return {
+    aiModel: aiSelection.map(stock => ({
+      name: stock.name,
+      reason: buildStockRecommendationReason(stock, investorProfile, market, "AI")
+    })),
+    analystConsensus: analystSelection.map(stock => ({
+      name: stock.name,
+      reason: buildStockRecommendationReason(stock, investorProfile, market, "ANALYST")
+    }))
+  };
+}
+
 function getStockRecommendations(market) {
-  const recommendations = {
-    domestic: {
-      aiModel: [
-        { name: "삼성전자", reason: "반도체·AI 메모리 회복 사이클과 높은 유동성을 함께 고려한 핵심 대형주" },
-        { name: "SK하이닉스", reason: "HBM 수요와 데이터센터 투자 확대에 민감한 성장 노출" },
-        { name: "현대차", reason: "글로벌 판매 기반, 주주환원, 전동화 전환을 함께 반영" },
-        { name: "NAVER", reason: "플랫폼 현금흐름과 AI·커머스 확장성을 고려" },
-        { name: "삼성바이오로직스", reason: "방어적 이익 가시성과 글로벌 CDMO 성장성을 반영" }
-      ],
-      analystConsensus: [
-        { name: "삼성전자", reason: "국내 증권사 리서치에서 장기 핵심 보유 종목으로 자주 거론" },
-        { name: "SK하이닉스", reason: "AI 반도체 수혜와 이익 개선 기대가 높은 편" },
-        { name: "현대차", reason: "수익성, 환율 민감도, 주주환원 매력이 함께 부각" },
-        { name: "KB금융", reason: "배당·자사주 등 주주환원과 안정적 이익 기반을 평가" },
-        { name: "HD현대일렉트릭", reason: "전력 인프라 투자 확대와 수주 모멘텀을 반영" }
-      ]
-    },
-    global: {
-      aiModel: [
-        { name: "Microsoft", reason: "클라우드, 생산성 소프트웨어, AI 인프라의 복합 성장성" },
-        { name: "NVIDIA", reason: "AI 가속기 생태계와 데이터센터 투자 확대에 대한 직접 노출" },
-        { name: "Alphabet", reason: "검색·광고 현금흐름과 AI 모델·클라우드 옵션을 함께 보유" },
-        { name: "Amazon", reason: "AWS 성장성과 이커머스 수익성 개선을 동시에 반영" },
-        { name: "Eli Lilly", reason: "비만·당뇨 치료제 파이프라인 기반의 헬스케어 성장주" }
-      ],
-      analystConsensus: [
-        { name: "NVIDIA", reason: "AI 인프라 투자 확대의 대표 수혜주로 평가" },
-        { name: "Microsoft", reason: "AI 서비스 상용화와 클라우드 점유율을 높게 평가" },
-        { name: "Amazon", reason: "AWS와 광고 사업의 이익 기여 확대 기대" },
-        { name: "Alphabet", reason: "광고 회복력과 AI 투자 여력을 동시에 보유" },
-        { name: "Broadcom", reason: "AI 네트워킹·맞춤형 반도체 수요와 소프트웨어 매출을 반영" }
-      ]
-    }
+  return buildStockRecommendationResult(market);
+}
+
+function getInvestorProfile() {
+  const input = latestStockRecommendationContext?.input || collectUserInputs();
+  const diagnosis = calculateAssetDiagnosis(input);
+  const allocation = latestStockRecommendationContext?.allocation || runLocalPortfolioAIModel(input, diagnosis).allocation;
+  const age = Number(input.ageGroup) || 40;
+  const currentStockRatio = diagnosis.grossAsset > 0 ? input.stockAsset / diagnosis.grossAsset : 0;
+  const realEstateRatio = diagnosis.realEstateRatio || 0;
+  const riskProfile = getRecommendationRiskProfile(input, age, currentStockRatio, realEstateRatio);
+
+  return {
+    input,
+    diagnosis,
+    allocation,
+    age,
+    riskProfile,
+    currentStockRatio,
+    realEstateRatio,
+    domesticTargetWeight: allocation.domesticStock || 0,
+    globalTargetWeight: allocation.globalStock || 0,
+    preferredAssetWeight: (allocation.domesticStock || 0) + (allocation.globalStock || 0)
+  };
+}
+
+function getRecommendationRiskProfile(input, age, currentStockRatio, realEstateRatio) {
+  let score = 3;
+
+  if (input.risk === "low") score -= 1.3;
+  if (input.risk === "high") score += 1.3;
+  if (input.horizon === "short" || input.shortInvestmentPeriod || input.nearHousePurchase) score -= 1;
+  if (input.horizon === "long") score += 0.7;
+  if (age >= 60) score -= 0.8;
+  if (age <= 30) score += 0.5;
+  if (input.goal === "preservation" || input.goal === "house" || input.goal === "cashflow") score -= 0.6;
+  if (input.goal === "growth") score += 0.7;
+  if (input.riskPhilosophy === "loss" || input.riskPhilosophy === "cash" || input.riskPhilosophy === "noDebt") score -= 0.7;
+  if (input.riskPhilosophy === "leverage" || input.strategyPhilosophy === "growth") score += 0.7;
+  if (currentStockRatio > 0.45) score -= 0.4;
+  if (realEstateRatio > 0.55) score += 0.2;
+
+  const clamped = Math.max(1, Math.min(5, score));
+  if (clamped <= 1.7) return { tier: "stable", score: clamped, label: "안정형" };
+  if (clamped <= 2.5) return { tier: "cautious", score: clamped, label: "안정추구형" };
+  if (clamped <= 3.4) return { tier: "neutral", score: clamped, label: "위험중립형" };
+  if (clamped <= 4.2) return { tier: "active", score: clamped, label: "적극투자형" };
+  return { tier: "aggressive", score: clamped, label: "공격투자형" };
+}
+
+function getStockUniverse(market) {
+  const universes = {
+    KR: [
+      { name: "삼성전자", sector: "반도체", style: "quality", riskLevel: 3, dividendScore: 3, growthScore: 4, volatilityScore: 3, analystScore: 5, qualityScore: 5 },
+      { name: "SK하이닉스", sector: "반도체", style: "growth", riskLevel: 4, dividendScore: 1, growthScore: 5, volatilityScore: 4, analystScore: 5, qualityScore: 4 },
+      { name: "현대차", sector: "자동차", style: "value", riskLevel: 3, dividendScore: 4, growthScore: 3, volatilityScore: 3, analystScore: 4, qualityScore: 4 },
+      { name: "기아", sector: "자동차", style: "value", riskLevel: 3, dividendScore: 4, growthScore: 3, volatilityScore: 3, analystScore: 4, qualityScore: 4 },
+      { name: "KB금융", sector: "금융", style: "dividend", riskLevel: 2, dividendScore: 5, growthScore: 2, volatilityScore: 2, analystScore: 4, qualityScore: 4 },
+      { name: "신한지주", sector: "금융", style: "dividend", riskLevel: 2, dividendScore: 5, growthScore: 2, volatilityScore: 2, analystScore: 4, qualityScore: 4 },
+      { name: "삼성바이오로직스", sector: "바이오", style: "quality", riskLevel: 3, dividendScore: 1, growthScore: 4, volatilityScore: 3, analystScore: 4, qualityScore: 5 },
+      { name: "셀트리온", sector: "바이오", style: "growth", riskLevel: 4, dividendScore: 1, growthScore: 4, volatilityScore: 4, analystScore: 3, qualityScore: 3 },
+      { name: "NAVER", sector: "플랫폼", style: "growth", riskLevel: 4, dividendScore: 1, growthScore: 4, volatilityScore: 4, analystScore: 3, qualityScore: 4 },
+      { name: "카카오", sector: "플랫폼", style: "growth", riskLevel: 5, dividendScore: 1, growthScore: 4, volatilityScore: 5, analystScore: 2, qualityScore: 2 },
+      { name: "LG에너지솔루션", sector: "2차전지", style: "growth", riskLevel: 4, dividendScore: 1, growthScore: 4, volatilityScore: 4, analystScore: 3, qualityScore: 3 },
+      { name: "POSCO홀딩스", sector: "소재", style: "cyclical", riskLevel: 4, dividendScore: 3, growthScore: 3, volatilityScore: 4, analystScore: 3, qualityScore: 3 },
+      { name: "한국전력", sector: "유틸리티", style: "defensive", riskLevel: 2, dividendScore: 2, growthScore: 2, volatilityScore: 2, analystScore: 3, qualityScore: 3 },
+      { name: "KT&G", sector: "필수소비재", style: "defensive", riskLevel: 2, dividendScore: 5, growthScore: 2, volatilityScore: 2, analystScore: 4, qualityScore: 4 },
+      { name: "TIGER 미국S&P500", sector: "ETF", style: "etf", riskLevel: 3, dividendScore: 2, growthScore: 3, volatilityScore: 3, analystScore: 4, qualityScore: 4 },
+      { name: "KODEX 200", sector: "ETF", style: "etf", riskLevel: 3, dividendScore: 2, growthScore: 3, volatilityScore: 3, analystScore: 4, qualityScore: 4 },
+      { name: "HD현대일렉트릭", sector: "전력기기", style: "growth", riskLevel: 4, dividendScore: 2, growthScore: 5, volatilityScore: 4, analystScore: 4, qualityScore: 3 },
+      { name: "한화에어로스페이스", sector: "방산", style: "growth", riskLevel: 4, dividendScore: 1, growthScore: 5, volatilityScore: 4, analystScore: 4, qualityScore: 3 }
+    ],
+    US: [
+      { name: "Microsoft", sector: "AI/클라우드", style: "quality", riskLevel: 3, dividendScore: 2, growthScore: 5, volatilityScore: 3, analystScore: 5, qualityScore: 5 },
+      { name: "NVIDIA", sector: "AI 반도체", style: "growth", riskLevel: 5, dividendScore: 1, growthScore: 5, volatilityScore: 5, analystScore: 5, qualityScore: 4 },
+      { name: "Alphabet", sector: "플랫폼", style: "quality", riskLevel: 3, dividendScore: 1, growthScore: 4, volatilityScore: 3, analystScore: 4, qualityScore: 5 },
+      { name: "Amazon", sector: "클라우드/소비", style: "growth", riskLevel: 4, dividendScore: 1, growthScore: 5, volatilityScore: 4, analystScore: 4, qualityScore: 4 },
+      { name: "Apple", sector: "빅테크", style: "quality", riskLevel: 3, dividendScore: 2, growthScore: 3, volatilityScore: 3, analystScore: 4, qualityScore: 5 },
+      { name: "Meta Platforms", sector: "플랫폼", style: "growth", riskLevel: 4, dividendScore: 1, growthScore: 4, volatilityScore: 4, analystScore: 4, qualityScore: 4 },
+      { name: "Broadcom", sector: "반도체", style: "quality", riskLevel: 4, dividendScore: 3, growthScore: 5, volatilityScore: 4, analystScore: 5, qualityScore: 4 },
+      { name: "Eli Lilly", sector: "헬스케어", style: "growth", riskLevel: 4, dividendScore: 1, growthScore: 5, volatilityScore: 3, analystScore: 5, qualityScore: 4 },
+      { name: "Johnson & Johnson", sector: "헬스케어", style: "defensive", riskLevel: 2, dividendScore: 5, growthScore: 2, volatilityScore: 2, analystScore: 3, qualityScore: 5 },
+      { name: "Procter & Gamble", sector: "필수소비재", style: "defensive", riskLevel: 2, dividendScore: 4, growthScore: 2, volatilityScore: 2, analystScore: 3, qualityScore: 5 },
+      { name: "Coca-Cola", sector: "필수소비재", style: "dividend", riskLevel: 2, dividendScore: 5, growthScore: 2, volatilityScore: 2, analystScore: 3, qualityScore: 4 },
+      { name: "JPMorgan Chase", sector: "금융", style: "value", riskLevel: 3, dividendScore: 4, growthScore: 3, volatilityScore: 3, analystScore: 4, qualityScore: 4 },
+      { name: "Berkshire Hathaway", sector: "복합지주", style: "quality", riskLevel: 2, dividendScore: 1, growthScore: 3, volatilityScore: 2, analystScore: 4, qualityScore: 5 },
+      { name: "Vanguard S&P 500 ETF", sector: "ETF", style: "etf", riskLevel: 3, dividendScore: 3, growthScore: 3, volatilityScore: 3, analystScore: 4, qualityScore: 4 },
+      { name: "Invesco QQQ ETF", sector: "ETF", style: "etf-growth", riskLevel: 4, dividendScore: 1, growthScore: 4, volatilityScore: 4, analystScore: 4, qualityScore: 4 },
+      { name: "UnitedHealth Group", sector: "헬스케어", style: "quality", riskLevel: 3, dividendScore: 2, growthScore: 3, volatilityScore: 3, analystScore: 3, qualityScore: 4 },
+      { name: "Visa", sector: "결제", style: "quality", riskLevel: 3, dividendScore: 2, growthScore: 4, volatilityScore: 3, analystScore: 4, qualityScore: 5 },
+      { name: "ASML", sector: "반도체 장비", style: "growth", riskLevel: 4, dividendScore: 1, growthScore: 5, volatilityScore: 4, analystScore: 4, qualityScore: 4 }
+    ]
   };
 
-  return recommendations[market] || recommendations.domestic;
+  return (universes[market] || universes.KR).map(stock => ({ ...stock, market }));
+}
+
+function filterStockUniverseForProfile(universe, investorProfile) {
+  let filtered = universe;
+
+  if (investorProfile.riskProfile.tier === "stable") {
+    filtered = universe.filter(stock => stock.riskLevel <= 3 || stock.dividendScore >= 4 || stock.style.includes("etf"));
+  } else if (investorProfile.riskProfile.tier === "cautious") {
+    filtered = universe.filter(stock => stock.riskLevel <= 4 || stock.qualityScore >= 4 || stock.style.includes("etf"));
+  } else if (investorProfile.riskProfile.tier === "neutral") {
+    filtered = universe.filter(stock => stock.qualityScore >= 3 || stock.style.includes("etf"));
+  } else {
+    filtered = universe.filter(stock => stock.growthScore >= 3 || stock.analystScore >= 4 || stock.style.includes("etf"));
+  }
+
+  return filtered.length >= 8 ? filtered : universe;
+}
+
+function calculateStockScore(stock, investorProfile, recommendationType) {
+  const weightsByTier = {
+    stable: { dividend: 0.25, growth: 0.08, lowVolatility: 0.25, analyst: 0.12, quality: 0.18, riskFit: 0.12, etf: 0.05 },
+    cautious: { dividend: 0.2, growth: 0.12, lowVolatility: 0.22, analyst: 0.13, quality: 0.17, riskFit: 0.14, etf: 0.07 },
+    neutral: { dividend: 0.14, growth: 0.22, lowVolatility: 0.16, analyst: 0.14, quality: 0.14, riskFit: 0.14, etf: 0.1 },
+    active: { dividend: 0.08, growth: 0.34, lowVolatility: 0.08, analyst: 0.14, quality: 0.12, riskFit: 0.18, etf: 0.08 },
+    aggressive: { dividend: 0.04, growth: 0.42, lowVolatility: 0.04, analyst: 0.12, quality: 0.1, riskFit: 0.22, etf: 0.06 }
+  };
+  const tierWeights = weightsByTier[investorProfile.riskProfile.tier] || weightsByTier.neutral;
+  const riskFit = 5 - Math.min(4, Math.abs(stock.riskLevel - investorProfile.riskProfile.score));
+  const lowVolatility = 6 - stock.volatilityScore;
+  const etfScore = stock.style.includes("etf") ? 5 : 0;
+  const marketTargetWeight = stockMarketTargetWeight(stock, investorProfile);
+  const sectorBonus = getPreferredSectorBonus(stock, investorProfile);
+  const profileFitScore = (
+    stock.dividendScore * tierWeights.dividend +
+    stock.growthScore * tierWeights.growth +
+    lowVolatility * tierWeights.lowVolatility +
+    stock.analystScore * tierWeights.analyst +
+    stock.qualityScore * tierWeights.quality +
+    riskFit * tierWeights.riskFit +
+    etfScore * tierWeights.etf
+  ) * 20 + sectorBonus + marketTargetWeight;
+  const analystFitScore = ((stock.analystScore * 0.45) + (stock.qualityScore * 0.35) + (riskFit * 0.2)) * 20;
+  const randomDiversityScore = Math.random() * 100;
+  const baseScore = recommendationType === "ANALYST"
+    ? (analystFitScore * 0.55) + (profileFitScore * 0.45)
+    : profileFitScore;
+
+  return Math.max(1, (baseScore * 0.7) + (randomDiversityScore * 0.3));
+}
+
+function stockMarketTargetWeight(stock, investorProfile) {
+  const targetWeight = stock.market === "KR"
+    ? investorProfile.domesticTargetWeight
+    : investorProfile.globalTargetWeight;
+  return targetWeight >= 25 ? 6 : targetWeight >= 15 ? 3 : 0;
+}
+
+function getPreferredSectorBonus(stock, investorProfile) {
+  let bonus = 0;
+  const input = investorProfile.input;
+  const growthSectors = ["반도체", "AI 반도체", "AI/클라우드", "클라우드/소비", "플랫폼", "바이오", "2차전지", "전력기기", "방산", "반도체 장비"];
+  const defensiveSectors = ["금융", "필수소비재", "유틸리티", "헬스케어", "복합지주"];
+
+  if ((input.goal === "growth" || input.horizon === "long") && growthSectors.includes(stock.sector)) bonus += 8;
+  if ((input.goal === "cashflow" || input.risk === "low") && (stock.dividendScore >= 4 || defensiveSectors.includes(stock.sector))) bonus += 8;
+  if (input.strategyPhilosophy === "passive" || input.strategyPhilosophy === "allocation") {
+    if (stock.style.includes("etf")) bonus += 10;
+  }
+  if (investorProfile.realEstateRatio > 0.5 && stock.market === "US") bonus += 4;
+  if (investorProfile.age >= 50 && stock.volatilityScore <= 3) bonus += 4;
+  if (investorProfile.age <= 30 && stock.growthScore >= 4) bonus += 4;
+
+  return bonus;
+}
+
+function pickWeightedRandomStocks(scoredStocks, count, previousRecommendation) {
+  const sortedStocks = [...scoredStocks].sort((a, b) => b.score - a.score);
+  const candidates = sortedStocks.slice(0, Math.max(count + 3, Math.ceil(sortedStocks.length * 0.75)));
+  let selected = [];
+
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    selected = weightedSampleWithoutReplacement(candidates, count);
+    if (!isSameRecommendationSet(selected, previousRecommendation)) break;
+  }
+
+  return selected;
+}
+
+function weightedSampleWithoutReplacement(candidates, count) {
+  const remaining = [...candidates];
+  const selected = [];
+
+  while (selected.length < count && remaining.length) {
+    const totalWeight = remaining.reduce((sum, item) => sum + Math.max(item.score, 1), 0);
+    let threshold = Math.random() * totalWeight;
+    const index = remaining.findIndex(item => {
+      threshold -= Math.max(item.score, 1);
+      return threshold <= 0;
+    });
+    selected.push(...remaining.splice(index >= 0 ? index : remaining.length - 1, 1));
+  }
+
+  return selected;
+}
+
+function isSameRecommendationSet(selected, previousRecommendation) {
+  if (!previousRecommendation) return false;
+  return selected.map(item => item.name).sort().join("|") === previousRecommendation;
+}
+
+function buildStockRecommendationReason(stock, investorProfile, market, recommendationType) {
+  const profile = investorProfile.riskProfile.label;
+  const targetWeight = market === "KR" ? investorProfile.domesticTargetWeight : investorProfile.globalTargetWeight;
+  const horizonText = translateHorizon(investorProfile.input.horizon);
+  const modeText = recommendationType === "ANALYST"
+    ? `애널리스트 선호도 ${stock.analystScore}/5와 우량도 ${stock.qualityScore}/5를 반영했습니다.`
+    : `${profile} 성향, ${horizonText}, 목표비중 ${targetWeight}%를 반영했습니다.`;
+  const styleText = stock.dividendScore >= 4
+    ? "배당·방어 성격이 있어 변동성 완충에 유리합니다."
+    : stock.growthScore >= 4
+      ? `${stock.sector} 성장성과 산업 모멘텀을 기대할 수 있는 후보입니다.`
+      : "우량주 성격과 분산 효과를 함께 고려한 후보입니다.";
+
+  return `${modeText} ${styleText}`;
 }
 
 function createAllocationBar(label, value, className) {
