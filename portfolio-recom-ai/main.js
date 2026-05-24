@@ -36,6 +36,18 @@ function addComma(value) {
 }
 
 const PORTFOLIO_INPUT_STORAGE_KEY = "portfolio-recom-ai-inputs-v1";
+const PORTFOLIO_SAVED_FIELD_IDS = [
+  "cashAsset",
+  "stockAsset",
+  "bondAsset",
+  "realEstateAsset",
+  "debt",
+  "otherAsset",
+  "pensionAsset",
+  "movableAsset",
+  "physicalAsset",
+  "cashIncludesInvestable"
+];
 
 document.addEventListener("DOMContentLoaded", function () {
   restorePortfolioInputs();
@@ -60,22 +72,35 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function getSavableInputElements() {
-  return Array.from(document.querySelectorAll("input[id], select[id]"))
-    .filter(element => !element.disabled && element.type !== "button" && element.type !== "submit");
+  return PORTFOLIO_SAVED_FIELD_IDS
+    .map(id => document.getElementById(id))
+    .filter(Boolean);
+}
+
+function normalizeMoneyForStorage(value) {
+  return String(value || "").replace(/[^\d]/g, "");
 }
 
 function savePortfolioInputs() {
   const savedValues = {};
 
   getSavableInputElements().forEach(element => {
-    savedValues[element.id] = element.type === "checkbox" ? element.checked : element.value;
+    if (element.type === "checkbox") {
+      savedValues[element.id] = element.checked;
+      return;
+    }
+
+    savedValues[element.id] = element.classList.contains("money-input")
+      ? normalizeMoneyForStorage(element.value)
+      : element.value;
   });
 
   localStorage.setItem(PORTFOLIO_INPUT_STORAGE_KEY, JSON.stringify(savedValues));
+  showPortfolioSaveToast("저장되었습니다");
 
   const button = document.getElementById("saveInputsBtn");
   const originalText = button.textContent;
-  button.textContent = "저장 완료";
+  button.textContent = "저장되었습니다";
   button.disabled = true;
 
   window.setTimeout(() => {
@@ -96,13 +121,36 @@ function restorePortfolioInputs() {
 
       if (element.type === "checkbox") {
         element.checked = Boolean(savedValues[element.id]);
-      } else {
-        element.value = savedValues[element.id];
+        return;
       }
+
+      element.value = element.classList.contains("money-input")
+        ? addComma(savedValues[element.id])
+        : savedValues[element.id];
     });
   } catch (error) {
     console.warn("저장된 입력값을 불러오지 못했습니다.", error);
   }
+}
+
+function showPortfolioSaveToast(message) {
+  let toast = document.getElementById("portfolioSaveToast");
+
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "portfolioSaveToast";
+    toast.className = "portfolio-save-toast";
+    toast.setAttribute("role", "status");
+    document.body.appendChild(toast);
+  }
+
+  toast.textContent = message;
+  toast.classList.add("show");
+
+  window.clearTimeout(showPortfolioSaveToast.timeoutId);
+  showPortfolioSaveToast.timeoutId = window.setTimeout(() => {
+    toast.classList.remove("show");
+  }, 1600);
 }
 
 const PORTFOLIO_AI_ENDPOINT = "";
