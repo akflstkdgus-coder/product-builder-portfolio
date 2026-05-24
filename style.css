@@ -82,37 +82,115 @@ h1 {
   transform: scale(1.1);
 }
 
-.numbers-display {
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
+.classifier-section {
   margin-bottom: 2rem;
-  min-height: 400px;
 }
 
-.set-row {
+.classifier-section h2 {
+  font-size: 1.5rem;
+  color: var(--accent-color);
+  margin-bottom: 1.5rem;
+}
+
+.classifier-controls {
   display: flex;
   justify-content: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
-#generate-btn {
-  padding: 1rem 2rem;
-  font-size: 1.2rem;
+#start-webcam-btn, .upload-btn-wrapper .btn {
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
   font-weight: bold;
-  color: #ffffff;
-  background-color: var(--accent-color);
+  border-radius: 8px;
   border: none;
-  border-radius: 10px;
   cursor: pointer;
+  background-color: var(--toggle-bg);
+  color: var(--text-color);
   transition: all 0.3s ease;
-  box-shadow: 0 0 15px var(--glow-color);
 }
 
-#generate-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 0 25px var(--glow-color), 0 0 40px var(--accent-color);
+#start-webcam-btn:hover, .upload-btn-wrapper .btn:hover {
+  background-color: var(--accent-color);
+  color: #ffffff;
+}
+
+.upload-btn-wrapper {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.upload-btn-wrapper input[type=file] {
+  font-size: 100px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+#media-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  min-height: 200px;
+}
+
+#webcam-container canvas, #image-preview {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px var(--shadow-color);
+}
+
+#label-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.prediction-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.label-text {
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+  font-weight: bold;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 10px;
+  background: var(--toggle-bg);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent-color);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.lotto-section h2 {
+  font-size: 1.5rem;
+  color: var(--accent-color);
+  margin-bottom: 1.5rem;
+}
+
+.separator {
+  border: none;
+  border-top: 1px solid var(--toggle-bg);
+  margin: 2.5rem 0;
 }
 
 .contact-section {

@@ -4,23 +4,49 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lotto Number Generator</title>
+  <title>Lotto & Image Classifier</title>
   <link href='/style.css' rel='stylesheet'>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 </head>
 <body>
   <div class="app-container">
     <header>
-      <h1>Lotto Number Generator</h1>
+      <h1>AI Image Classifier</h1>
       <button id="theme-toggle" aria-label="Toggle dark/light mode">
         <span class="icon">🌙</span>
       </button>
     </header>
     <main>
-      <div class="numbers-display"></div>
-      <button id="generate-btn">Generate Numbers</button>
+      <section class="classifier-section">
+        <h2>붉은사막 vs 음식 판독기</h2>
+        <div class="classifier-controls">
+          <button type="button" id="start-webcam-btn">웹캠 시작</button>
+          <div class="upload-btn-wrapper">
+            <button class="btn">이미지 업로드</button>
+            <input type="file" id="image-input" accept="image/*" />
+          </div>
+        </div>
+
+        <div id="media-container">
+          <div id="webcam-container"></div>
+          <img id="image-preview" style="display:none;" />
+        </div>
+
+        <div id="label-container"></div>
+      </section>
+
+      <hr class="separator">
+
+      <section class="lotto-section">
+        <h2>Lotto Number Generator</h2>
+        <div class="numbers-display"></div>
+        <button id="generate-btn">Generate Numbers</button>
+      </section>
 
       <section class="contact-section">
-        <hr class="separator">
+...
+
         <h2>제휴 및 문의</h2>
         <form action="https://formspree.io/f/mojblpqd" method="POST" id="contact-form">
           <div class="form-group">
